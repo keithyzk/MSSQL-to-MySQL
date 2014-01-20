@@ -50,7 +50,7 @@ for tbl in ms_tables:
         elif col.xtype == 104:
             colType = "bit"
             attr += "`"+col.name +"` "+ colType + "(" + str(col.xprec) +"),"
-            sattr += "cast(["+col.name+"] as int("+str(col.xprec)+")) as ["+col.name+"]," 
+            sattr += "cast(["+col.name+"] as varchar("+str(col.xprec)+")) as ["+col.name+"]," 
 
         elif col.xtype == 106:
             colType = "decimal"
@@ -70,7 +70,6 @@ for tbl in ms_tables:
     attr = attr[:-1]
     sattr = sattr[:-1]
     
-
 
 
     if functions.check_table_exists(my_cursor, crtTable):
