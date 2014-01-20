@@ -49,8 +49,8 @@ for tbl in ms_tables:
             sattr += "cast(["+col.name+"] as varchar("+str(col.xprec)+")) as ["+col.name+"],"
         elif col.xtype == 104:
             colType = "bit"
-            attr += "`"+col.name +"` "+ colType + "(" + str(col.xprec) +"),"
-            sattr += "cast(["+col.name+"] as varchar("+str(col.xprec)+")) as ["+col.name+"]," 
+            attr += "`"+col.name +"` "+ colType + "(" + str(col.length) +"),"
+            sattr += "cast(["+col.name+"] as int) as ["+col.name+"]," 
 
         elif col.xtype == 106:
             colType = "decimal"
