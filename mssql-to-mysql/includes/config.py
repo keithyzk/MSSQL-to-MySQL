@@ -10,4 +10,4 @@ MYSQL_passwd="password"
 MYSQL_db="dbtoselect"
 
 #tables to retrieve and recreate
-list_of_tables = []
+list_of_tables = [['original_name', 'new_name_or_same']]

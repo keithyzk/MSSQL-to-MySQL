@@ -16,22 +16,29 @@ ms_cursor = ms_conn.cursor()
 my_conn = MySQLdb.connect(host=config.MYSQL_host,user=config.MYSQL_user, passwd=config.MYSQL_passwd, db=config.MYSQL_db)
 my_cursor = my_conn.cursor()   
 
+final_table_list = []
+final_new_table_names = {}
 if config.list_of_tables:
+    for in_tables in config.list_of_tables:
+        final_table_list.append(in_tables[0])
+        final_new_table_names[in_tables[0]] = in_tables[1]
 
-    ms_tables = "','".join(map(str, config.list_of_tables))
+    ms_tables = "','".join(map(str, final_table_list))
     ms_tables = "WHERE name in ('"+ms_tables+"')"
 else:
     ms_tables = "WHERE type in ('U')" #tables are 'U' and views are 'V' 
+
 
 ms_cursor.execute("SELECT * FROM sysobjects %s;" % ms_tables ) #sysobjects is a table in MSSQL db's containing meta data about the database. (Note: this may vary depending on your MSSQL version!)
 ms_tables = ms_cursor.fetchall()
 noLength = [56, 58, 61, 35] #list of MSSQL data types that don't require a defined lenght ie. datetime
 
 for tbl in ms_tables:
-    crtTable = tbl[0]
+    crtTable = final_new_table_names[tbl[0]]
     ms_cursor.execute("SELECT * FROM syscolumns WHERE id = OBJECT_ID('%s')" % tbl[0]) #syscolumns: see sysobjects above.
     columns = ms_cursor.fetchall()
     attr = ""
+    sattr = ""
     for col in columns:
         colType = data_types.data_types[str(col.xtype)] #retrieve the column type based on the data type id
 
@@ -39,18 +46,29 @@ for tbl in ms_tables:
         if col.xtype == 60:
             colType = "float"
             attr += "`"+col.name +"` "+ colType + "(" + str(col.length) + "),"
+            sattr += "cast(["+col.name+"] as varchar("+str(col.xprec)+")) as ["+col.name+"],"
+        elif col.xtype == 104:
+            colType = "bit"
+            attr += "`"+col.name +"` "+ colType + "(" + str(col.xprec) +"),"
+            sattr += "cast(["+col.name+"] as int("+str(col.xprec)+")) as ["+col.name+"]," 
+
         elif col.xtype == 106:
             colType = "decimal"
-            attr += "`"+col.name +"` "+ colType + "(" + str(col.xprec) + "," + str(col.xscale) + "),"            
+            attr += "`"+col.name +"` "+ colType + "(" + str(col.xprec) + "," + str(col.xscale) + "),"
+            sattr += "cast(["+col.name+"] as varchar("+str(col.xprec)+")) as ["+col.name+"],"            
         elif col.xtype == 108:
             colType = "decimal"
-            attr += "`"+col.name +"` "+ colType + "(" + str(col.xprec) + "," + str(col.xscale) + "),"       
+            attr += "`"+col.name +"` "+ colType + "(" + str(col.xprec) + "," + str(col.xscale) + ")," 
+            sattr += "cast(["+col.name+"] as varchar("+str(col.xprec)+")) as ["+col.name+"],"      
         elif col.xtype in noLength:
             attr += "`"+col.name +"` "+ colType + ","
+            sattr += "["+col.name+"],"
         else:
             attr += "`"+col.name +"` "+ colType + "(" + str(col.length) + "),"
+            sattr += "["+col.name+"],"
     
     attr = attr[:-1]
+    sattr = sattr[:-1]
     
 
 
@@ -59,7 +77,7 @@ for tbl in ms_tables:
         my_cursor.execute("drop table "+crtTable)
 
     my_cursor.execute("CREATE TABLE " + crtTable + " (" + attr + ");") #create the new table and all columns
-    ms_cursor.execute("SELECT * FROM "+ tbl[0])
+    ms_cursor.execute("SELECT "+sattr+" FROM "+ tbl[0])
     tbl_data = ms_cursor.fetchall()
 
     for row in tbl_data:
