@@ -1,11 +1,7 @@
 data_types = {
 	"34": "image",
 	"35": "text",
-	"36": "BINARY",
-	"40": "date",
-	"41": "time",
-	"42": "timestamp(6)",
-	"43": "datetimeoffset",
+	"36": "uniqueidentifier",
 	"48": "tinyint",
 	"52": "smallint",
 	"56": "int",
@@ -27,6 +23,7 @@ data_types = {
 	"175": "char",
 	"189": "timestamp",
 	"231": "nvarchar",
+	"231": "sysname",
 	"239": "nchar",
 	"241": "xml"
 }
