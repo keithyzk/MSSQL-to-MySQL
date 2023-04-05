@@ -81,16 +81,22 @@ for tbl in ms_tables:
     print(sattr[:-1])
     print('=========')
 
-    
-
+    ms_cursor.execute("select b.column_name from information_schema.table_constraints a inner join information_schema.constraint_column_usage b on a.constraint_name = b.constraint_name where a.constraint_type = 'PRIMARY KEY' and a.table_name = '%s'" % tbl[0])
+    primary_key_col = ms_cursor.fetchall()
+    print(primary_key_col[0][0])
 
     if functions.check_table_exists(my_cursor, crtTable):
         my_cursor.execute("drop table "+crtTable)
-    print("CREATE TABLE " + crtTable + " (" + attr + ");")
-    print("#####################")
-    my_cursor.execute("CREATE TABLE " + crtTable + " (" + attr + ");") #create the new table and all columns
+    print("CREATE TABLE " + crtTable + " (" + attr + " ,primary key(" + primary_key_col[0][0] + "));")
+    # my_cursor.execute("CREATE TABLE " + crtTable + " (" + attr + ");") #create the new table and all columns
+    my_cursor.execute("CREATE TABLE " + crtTable + " (" + attr + " ,primary key(" + primary_key_col[0][0] + "));")
+    print("2222222222222222222222")
+
+    print("ms_cursor.execute(SELECT "+sattr+" FROM "+ tbl[0]+")")
     ms_cursor.execute("SELECT "+sattr+" FROM "+ tbl[0])
     tbl_data = ms_cursor.fetchall()
+    print("#####################")
+
 
     for row in tbl_data:
         new_row = list(row)
@@ -107,6 +113,7 @@ for tbl in ms_tables:
         my_conn.ping(True)
        
         query_string = "INSERT INTO `" + crtTable + "` VALUES %r;" % (tuple(new_row),)
+        print(query_string)
         
        
         my_cursor.execute(query_string)
