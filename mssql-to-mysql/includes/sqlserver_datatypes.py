@@ -10,7 +10,7 @@ data_types = {
 	"52": "smallint",
 	"56": "int",
 	"58": "smalldatetime",
-	"59": "real",
+	"59": "float",
 	"60": "money",
 	"61": "datetime",
 	"62": "float",
