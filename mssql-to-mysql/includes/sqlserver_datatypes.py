@@ -1,10 +1,10 @@
 data_types = {
 	"34": "image",
 	"35": "text",
-	"36": "BINARY",
+	"36": "uniqueidentifier",
 	"40": "date",
 	"41": "time",
-	"42": "timestamp(6)",
+	"42": "datetime2",
 	"43": "datetimeoffset",
 	"48": "tinyint",
 	"52": "smallint",
