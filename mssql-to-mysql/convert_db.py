@@ -40,19 +40,33 @@ ms_tables = ms_cur.fetchall()
 
 # if list_of_tables is not empty, only process the tables in the list
 if config.list_of_tables:
-    for table in ms_tables:
+    for table in ms_tables[::-1]:
         if table[0] not in config.list_of_tables:
-            print("Removing table: %s" % table[0])
+            # print("Removing table: %s" % table[0])
             ms_tables.remove(table)
 
 # remove the list of ignore tables
 if config.list_of_ignore_tables:
     for ignore_table in config.list_of_ignore_tables:
-        for table in ms_tables:
+        for table in ms_tables[::-1]:
             if table[0] == ignore_table:
                 ms_tables.remove(table)
 
 noLength = [36, 56, 58, 61, 35, 42, 40] #list of MSSQL data types that don't require a defined lenght ie. datetime
+
+def process_default_variable(var):
+    if var == '((0))':
+        return 0
+    elif var == '(getdate())':
+        return 'now()'
+    elif var == "('0')":
+        return "'0'"
+    elif var.startswith('(0x') and var.endswith(')'):
+        return int(var[3:-1], 16)
+    elif var == '(newid())':
+        return 'uuid()'
+    else:
+        return var
 
 def process_table(ms_session,my_session,tbl):
 
@@ -135,7 +149,22 @@ def process_table(ms_session,my_session,tbl):
         else:
             attr += "`"+col.name +"` "+ colType + "(" + str(col.length) + "),"
             sattr += "["+col.name+"],"
-    
+        
+        # check if the column has a default value
+        get_default_value_sql = "SELECT sm.text AS default_value FROM sys.sysobjects so JOIN sys.syscolumns sc ON sc.id = so.id LEFT JOIN sys.syscomments sm ON sm.id = sc.cdefault WHERE so.xtype = 'U' AND so.name = '%s' AND sc.name = '%s' and sm.text != '(NULL)'" % (crtTable, col.name)
+        default_result = ms_cursor.execute(text(get_default_value_sql)).fetchone()
+        if default_result:
+            default_var = str(default_result)[2:-3]
+            default_value = process_default_variable(default_var)
+            default_value = str(default_value)
+            print(default_value)
+            print(type(default_value))
+
+            if attr.endswith(","):
+                attr = attr[:-1]
+                attr += " default " + default_value + ","
+
+
     attr = attr[:-1]
     sattr = sattr[:-1]
 
